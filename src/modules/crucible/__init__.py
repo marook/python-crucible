@@ -108,7 +108,7 @@ class Api(object):
 
         logging.debug('Calling crucible service %s', url)
 
-        return self.jsonUrlOpenFactory.urlopen(url)
+        return self.jsonUrlOpenFactory.urlopen(url)['reviewData']
 
     def getReview(self, id):
         '''
@@ -165,6 +165,30 @@ class Api(object):
 
         response = self.jsonUrlOpenFactory.urlopen(url)
         return response['comments']
+
+    #def addReviewItemComment(self, rid, riId, message, fromLineRange, toLineRange, draft=False, deleted=False, defectRaised=false, defectApproved=false, readStatus="UNREAD", ):
+    def addReviewItemComment(self, rid, riId, message, toLineRange):
+        '''
+        rid:         review id
+        riId:        review item id
+        message:     message of the comment with Wiki syntax
+        toLineRange: either one line (as integer or string) or a range as string (e.g., '5-12")
+
+        returns: a dict of the newly created comment as shown at https://docs.atlassian.com/fisheye-crucible/latest/wadl/crucible.html#rest-service:reviews-v1:id:reviewitems:riId:comments
+        '''
+        url = self._buildReviewUrl(rid, 'reviewitems/%s/comments' % (riId))
+
+        logging.debug('Calling crucible service %s', url)
+
+        data = {
+            "message": message,
+            "toLineRange": toLineRange
+        }
+        # TODO: add more fields as optional parameters of this function and if
+        # set append to this dict
+
+        response = self.jsonUrlOpenFactory.urlopen(url, data = data)
+        return response
 
     @rest.dumpHttpError
     def addReviewItemRevision(self, id, revisionData):
