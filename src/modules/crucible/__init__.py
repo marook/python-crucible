@@ -97,6 +97,19 @@ class Api(object):
 
         return rest.buildUrl(baseUrl, self._defaultParams)
 
+    def getReviews(self, filter):
+        '''
+        Get a filtered list of reviews.
+        For filter use e.g. "allOpenReviews", "open", ...
+
+        Example https://my.crucible.server/crucible/rest-service/reviews-v1/filter/{filter}
+        '''
+        url = self._buildReviewUrl('filter/' + filter)
+
+        logging.debug('Calling crucible service %s', url)
+
+        return self.jsonUrlOpenFactory.urlopen(url)
+
     def getReview(self, id):
         '''
         Example https://my.crucible.server/crucible/rest-service/reviews-v1/CR-1300
