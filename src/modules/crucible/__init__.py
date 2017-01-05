@@ -136,6 +136,36 @@ class Api(object):
 
         self.urlOpenFactory.urlopen(url, data = userName)
 
+    def getReviewItems(self, rid):
+        '''
+        id: review id, e.g. "CR-362"
+        '''
+        url = self._buildReviewUrl(rid, 'reviewitems')
+
+        logging.debug('Calling crucible service %s', url)
+
+        response = self.jsonUrlOpenFactory.urlopen(url)
+        return response['reviewItem']
+
+    def getReviewItemComments(self, rid, riId, render=False):
+        '''
+        rid:    review id
+        riId:   review item id
+        render: indicate whether to render the wiki text in the returned
+                comments. If set to "true", the comments will contain a
+                <messageAsHtml> element containing the wiki rendered html
+        '''
+        if render:
+            render = '?render=true'
+        else:
+            render = ''
+        url = self._buildReviewUrl(rid, 'reviewitems/%s/comments%s' % (riId, render))
+
+        logging.debug('Calling crucible service %s', url)
+
+        response = self.jsonUrlOpenFactory.urlopen(url)
+        return response['comments']
+
     @rest.dumpHttpError
     def addReviewItemRevision(self, id, revisionData):
         '''
