@@ -5,9 +5,12 @@ import functools
 
 def buildUrl(url, params = []):
     if(len(params) > 0):
-        url += '?'
-
-        first = True
+        if url.find('?') < 0:
+            # no '?' in the url
+            url += '?'
+            first = True
+        else:
+            first = False
         for key, value in params:
             if(first):
                 first = False
