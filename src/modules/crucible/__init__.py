@@ -97,6 +97,19 @@ class Api(object):
 
         return rest.buildUrl(baseUrl, self._defaultParams)
 
+    def getReviews(self, filter):
+        '''
+        Get a filtered list of reviews.
+        For filter use e.g. "allOpenReviews", "open", ...
+
+        Example https://my.crucible.server/crucible/rest-service/reviews-v1/filter/{filter}
+        '''
+        url = self._buildReviewUrl('filter/' + filter)
+
+        logging.debug('Calling crucible service %s', url)
+
+        return self.jsonUrlOpenFactory.urlopen(url)['reviewData']
+
     def getReview(self, id):
         '''
         Example https://my.crucible.server/crucible/rest-service/reviews-v1/CR-1300
@@ -122,6 +135,60 @@ class Api(object):
         logging.debug('Calling crucible service %s', url)
 
         self.urlOpenFactory.urlopen(url, data = userName)
+
+    def getReviewItems(self, rid):
+        '''
+        id: review id, e.g. "CR-362"
+        '''
+        url = self._buildReviewUrl(rid, 'reviewitems')
+
+        logging.debug('Calling crucible service %s', url)
+
+        response = self.jsonUrlOpenFactory.urlopen(url)
+        return response['reviewItem']
+
+    def getReviewItemComments(self, rid, riId, render=False):
+        '''
+        rid:    review id
+        riId:   review item id
+        render: indicate whether to render the wiki text in the returned
+                comments. If set to "true", the comments will contain a
+                <messageAsHtml> element containing the wiki rendered html
+        '''
+        if render:
+            render = '?render=true'
+        else:
+            render = ''
+        url = self._buildReviewUrl(rid, 'reviewitems/%s/comments%s' % (riId, render))
+
+        logging.debug('Calling crucible service %s', url)
+
+        response = self.jsonUrlOpenFactory.urlopen(url)
+        return response['comments']
+
+    #def addReviewItemComment(self, rid, riId, message, fromLineRange, toLineRange, draft=False, deleted=False, defectRaised=false, defectApproved=false, readStatus="UNREAD", ):
+    def addReviewItemComment(self, rid, riId, message, toLineRange):
+        '''
+        rid:         review id
+        riId:        review item id
+        message:     message of the comment with Wiki syntax
+        toLineRange: either one line (as integer or string) or a range as string (e.g., '5-12")
+
+        returns: a dict of the newly created comment as shown at https://docs.atlassian.com/fisheye-crucible/latest/wadl/crucible.html#rest-service:reviews-v1:id:reviewitems:riId:comments
+        '''
+        url = self._buildReviewUrl(rid, 'reviewitems/%s/comments' % (riId))
+
+        logging.debug('Calling crucible service %s', url)
+
+        data = {
+            "message": message,
+            "toLineRange": toLineRange
+        }
+        # TODO: add more fields as optional parameters of this function and if
+        # set append to this dict
+
+        response = self.jsonUrlOpenFactory.urlopen(url, data = data)
+        return response
 
     @rest.dumpHttpError
     def addReviewItemRevision(self, id, revisionData):
